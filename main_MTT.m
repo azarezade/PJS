@@ -2,21 +2,20 @@ if ~(exist('batchTest','var') && batchTest == true)
     clear;
     close all;
     clc;
-    
+
     rng('default');
     randSeed=0;
     rng(randSeed);
     trackerName = 'MTT';
-   
-%     addpath(genpath(fullfile(pwd,'..','toolbox')),'-BEGIN');
+
     addpath(fullfile(pwd,'bin'),'-BEGIN');
     addpath(fullfile(pwd,'trackers',trackerName),'-BEGIN');
 
     clc;
     settings = set_param();
-  
+
 end
-   
+
 % video_name = 'car11';
 % video_path = fullfile('.\data\',video_name);
 % m_start_frame = 1;  %starting frame number
@@ -33,7 +32,7 @@ end
  % Initialize Data Set Information
  [ frameNum, imgNames, imgSize ] = initDataSetInfo(settings.dataSet);
  nframes  = frameNum;
- 
+
  for t=1:nframes
 
 	if isequal(settings.dataSet.type,'CVLab')
@@ -46,7 +45,7 @@ end
 
 % Read Ground Truth
     [gtCenters, gtCorners,gtInterv] = readGroundTruth(settings.dataSet, frameNum);
-    
+
 %% initialize bounding box
 % m_boundingbox = [gtCorners(1,1),gtCorners(1,2),gtCorners(1,3)-gtCorners(1,1),gtCorners(1,6)-gtCorners(1,2)];  % [left-top-x, left-top-y, width, height];
 
@@ -56,20 +55,20 @@ end
 % 				\					\
 % 				 \       target      \
 % 				  \                   \
-% 				  p2-------------------\  
+% 				  p2-------------------\
 init_pos = [gtCorners(1,2)  gtCorners(1,8)  gtCorners(1,4);
             gtCorners(1,1)  gtCorners(1,7)  gtCorners(1,3)];
-        
+
 opt.init_pos = double(init_pos);  %  initialization bounding box
-% 
+%
 % width = m_boundingbox(3);
 % height = m_boundingbox(4);
 
-%% 	set object size including height and width based on the initialization		
+%% 	set object size including height and width based on the initialization
 %if min( 0.5*[height width]) < 25
  %   sz_T = 1.0 * [height width];
  %   if height > 80
- %       sz_T =  [ 0.5 *height width];  
+ %       sz_T =  [ 0.5 *height width];
  %   end
 %else
 %    sz_T = 0.5 * [height width];
@@ -95,7 +94,7 @@ opt.iter_maxi = 100; % lambda, eta,obj_fun_th, and iter_maxi are parameters for 
 opt.rel_std_afnv =  [settings.pfParam.affsig(3),settings.pfParam.affsig(5),settings.pfParam.affsig(4),settings.pfParam.affsig(6),...
     settings.pfParam.affsig(1),settings.pfParam.affsig(2)];
 %0.005,0.0005,0.0005,0.005,4,4]; % affine parameters for particle sampling
- 
+
 opt.m_theta = 0.6;  % [0 1] decide object template update
 opt.show_optimization = false; % show optimization results to help tue eta and lambda for APG optimization.
 opt.show_time = true; % show optimization speed
@@ -126,7 +125,7 @@ for t = 1:nframes
     rect=drawAffine(map_afnv, sz_T, color, 2);
      resultsCorners(t,:) = [rect(2,1), rect(1,1), rect(2,1),rect(1,2),rect(2,3),rect(1,2),rect(2,3),rect(1,1)];
 %    all_rect =[all_rect; rect(2,1) rect(1,1) rect(2,3)-rect(2,1) rect(1,2)-rect(1,1)];
-    
+
 %     s_res	= all_images{t}(1:end-4);
 %     s_res	= fliplr(strtok(fliplr(s_res),'/'));
 %     s_res	= fliplr(strtok(fliplr(s_res),'\'));
@@ -162,7 +161,7 @@ end
 
 %% Remove from path
 if ~(exist('batchTest','var') && batchTest == true)
-    rmpath(genpath(fullfile(pwd,'..','toolbox')),'-BEGIN');
+    rmpath(genpath(fullfile(pwd,'toolbox')),'-BEGIN');
     rmpath(fullfile(pwd,'bin'),'-BEGIN');
     rmpath(fullfile(pwd,'MTT'),'-BEGIN');
     rmpath(genpath(fullfile(pwd,'MTT','MTT_Toolbox')),'-BEGIN');

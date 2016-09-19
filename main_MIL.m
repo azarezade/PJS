@@ -1,9 +1,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % This code is matlab version for MIL tracker, which was proposed by Boris
-% Babenko (see http://vision.ucsd.edu/~bbabenko/project_miltrack.shtml for 
+% Babenko (see http://vision.ucsd.edu/~bbabenko/project_miltrack.shtml for
 % more details). I rewrote it for understand it easily. The copyright
-% belongs to Boris. Please use it for adacemic purpose. And it is not 
-% guaranteed to be safe, thus you should use this code at own risk 
+% belongs to Boris. Please use it for adacemic purpose. And it is not
+% guaranteed to be safe, thus you should use this code at own risk
 %
 % For bug report, please mail to whluo.china@gmail.com
 %
@@ -12,13 +12,12 @@ if ~(exist('batchTest','var') && batchTest == true)
 	fclose('all');
     close all;
     clear;
-    
+
     rng('default');
     randSeed=0;
     rng(randSeed);
     trackerName = 'MIL';
 
-%     addpath(genpath(fullfile(pwd,'..','toolbox')),'-BEGIN');
     addpath(fullfile(pwd,'bin'),'-BEGIN');
     addpath(fullfile(pwd,'trackers',trackerName),'-BEGIN');
 
@@ -32,7 +31,7 @@ end
 
 % Read Ground Truth
     [gtCenters, gtCorners,gtInterv] = readGroundTruth(settings.dataSet, frameNum);
-    
+
 % Initialize tracker state
     [ initGeoParam, initAffParam] = initState(gtCenters,gtCorners,settings.objParam);
 
@@ -60,7 +59,7 @@ trparams.initpostrainrad = 3;
 trparams.initnegnumtrain = 65;
 trparams.states = inistate;
 
-%parameters of strong classfier 
+%parameters of strong classfier
 clfparams.numsel = 50;
 clfparams.numfeat = 250;
 clfparams.lrate = 0.85;  %learning rate
@@ -80,7 +79,7 @@ ftrparams.maxsum = 0;
 ftrs = generateharrftrs(ftrparams);
 
 %% Main Loop
-reverseStr = ''; 
+reverseStr = '';
 fprintf('\n');
 for f=1:frameNum
     tic;
@@ -90,22 +89,22 @@ for f=1:frameNum
     [m n c] = size(I0);
     if c==3
         I1 = I0;
-        I0=rgb2gray(I0);    
+        I0=rgb2gray(I0);
     else
         I1 = repmat(I0,[1,1,3]);%for drawing result
     end
-    
+
     integral_I0 = integralImage(I0);
-    %%%%%%%%initialization 
+    %%%%%%%%initialization
     if f == 1
-        [clfle] = iniclfweakle(clfparams); 
+        [clfle] = iniclfweakle(clfparams);
         possamples = sampleimage(trparams,states(f,:),1,I0);
         negsamples = sampleimage(trparams,states(f,:),0,I0);
         [posftrval,negftrval]=computeharr(possamples,negsamples,ftrs,I0,integral_I0);
-        [clf] = updateclfweakle(posftrval,negftrval,clfle,clfparams,0); 
+        [clf] = updateclfweakle(posftrval,negftrval,clfle,clfparams,0);
         [posres,negres] = getlearnres(clf,posftrval,negftrval);
         selectors = getselectors(posres,negres,clfparams.numsel);
-    %%%%%%%%%%run time 
+    %%%%%%%%%%run time
     else
         detectx = sampleimage(trparams,states(f-1,:),4,I0);
         prob = classify(detectx,selectors,clf,I0,ftrs,integral_I0);
@@ -116,11 +115,11 @@ for f=1:frameNum
         imshow(newim);
         hold on
 %         imwrite(newim,sprintf('%s_%04d.jpg',[OutputDir 'TrackResult'],f));
-   
+
         tracknegsamples = sampleimage(trparams,states(f,:),2,I0);
         trackpossamples = sampleimage(trparams,states(f,:),3,I0);
         [trackposftrval,tracknegftrval]=computeharr(trackpossamples,tracknegsamples,ftrs,I0,integral_I0);
-        [clf]=updateclfweakle(trackposftrval,tracknegftrval,clf,clfparams,1); 
+        [clf]=updateclfweakle(trackposftrval,tracknegftrval,clf,clfparams,1);
         [trackposres,tracknegres] = getlearnres(clf,trackposftrval,tracknegftrval);
         selectors = getselectors(trackposres,tracknegres,clfparams.numsel);
         clear detectx
@@ -132,8 +131,8 @@ for f=1:frameNum
         clear tracknegftrval
         clear trackposres
         clear tracknegres
-    end 
-    
+    end
+
     trackTime = toc;
 	FPS(f) = 1/trackTime;
     msg = sprintf(' frame# = %u \n FPS = %2.2f \n progress = %2.2f%s \n ----------- \n elapsed time = %us',f,FPS(f),f*100/frameNum,'%%',uint32(etime(clock,t0)));
@@ -158,7 +157,7 @@ if ~(exist('batchTest','var') && batchTest == true)
 end
 
 %% Plot results
-% 
+%
 % %% Remove from path
 % if ~(exist('batchTest','var') && batchTest == true)
 %     rmpath(genpath(fullfile(pwd,'..','toolbox')));

@@ -1,13 +1,12 @@
 if ~(exist('batchTest','var') && batchTest == true)
 	close all;
     clear;
-    
+
     rng('default');
     randSeed=0;
     rng(randSeed);
     trackerName = 'IVT';
-    
-%     addpath(genpath(fullfile(pwd,'..','toolbox')),'-BEGIN');
+
     addpath(fullfile(pwd,'bin'),'-BEGIN');
     addpath(fullfile(pwd,'trackers',trackerName),'-BEGIN');
 
@@ -39,7 +38,7 @@ end
 % Show First Frame
     firstFrame = loadFrame( 1, imgNames, settings);
     firstCorner = gtCorners(1,:);
-  
+
 % Initializeing Variables
     tmpl.mean = warpimg(firstFrame, initAffParam, settings.objParam.size);
     tmpl.basis = [];
@@ -60,20 +59,20 @@ end
     FPS = zeros(frameNum,1);
     trackerr = zeros(1,frameNum);
     meanerr = zeros(1,frameNum);
-   
-reverseStr = []; 
+
+reverseStr = [];
 fprintf('\n');
 prevCLE = 0;
 prevVOC = 1;
 allCLE = prevCLE;
 allVOC = prevVOC;
 for f = 1:frameNum
-    
+
     if (settings.verifyMode == 1) &&  f == settings.dataSet.lastFrame
         verify;
         return;
     end
-    
+
     tic;
 %         currentFrame = frame(:,:,f);
     currentFrame = loadFrame( f, imgNames, settings);
@@ -107,13 +106,13 @@ for f = 1:frameNum
         updateDictionary;
 
     % Compute Corners And Center of the Answer
-        bestParticle = param.est;       
+        bestParticle = param.est;
         bestCorners = paramAff2Corner(paramGeom2Aff(bestParticle), settings.objParam.size);
         resultsCorners(f,:) = bestCorners;
-        
+
     % Show Tracker
     if settings.videoParam.show
-        if f>20 
+        if f>20
             objDict = tmpl.basis;
 %             [objDict, objDictNorm] = normalizeMat(tmpl.basis);
             objDictNorm = ones(1,10);
@@ -121,7 +120,7 @@ for f = 1:frameNum
             showTracker(currentFrame,bestCorners,f,objDict,objDictNorm,settings)
         end
     end
-    
+
     % Evaluate Measures
 %     if mod(f-1,gtInterv)==0
 %         CLE = computeCenterDistError(resultsCorners(f,:), gtCorners(1+((f-1)/gtInterv),:), gtInterv);
@@ -129,7 +128,7 @@ for f = 1:frameNum
 %         prevCLE = CLE;
 %         prevVOC= VOC;
 %         allCLE = [allCLE CLE];
-%         allVOC = [allVOC VOC];        
+%         allVOC = [allVOC VOC];
 %     else
 %         VOC = prevVOC;
 %         CLE = prevCLE;
@@ -137,10 +136,10 @@ for f = 1:frameNum
 
     trackTime = toc;
     FPS(f) = 1/trackTime;
-    
+
     % Display tracker statistics
-%     msg = sprintf(' frame = %u \n FPS = %2.2f \n CLE = %2.0f\t\t\tavgCLE = %2.1f \n VOC = %1.2f\t\t\tavgVOC = %1.2f  \n progress = %2.2f%s \n ----------- \n elapsed time = %us',f,FPS(f),CLE,mean(allCLE),VOC,mean(allVOC),f*100/frameNum,'%%',uint32(etime(clock,t0)));    
-%     msg = sprintf(' frame = %u \n FPS = %2.2f \n CLE = %2.0f \n VOC = %1.3f \n progress = %2.2f%s \n ----------- \n elapsed time = %us',f,FPS(f),CLE,VOC,f*100/frameNum,'%%',uint32(etime(clock,t0)));    
+%     msg = sprintf(' frame = %u \n FPS = %2.2f \n CLE = %2.0f\t\t\tavgCLE = %2.1f \n VOC = %1.2f\t\t\tavgVOC = %1.2f  \n progress = %2.2f%s \n ----------- \n elapsed time = %us',f,FPS(f),CLE,mean(allCLE),VOC,mean(allVOC),f*100/frameNum,'%%',uint32(etime(clock,t0)));
+%     msg = sprintf(' frame = %u \n FPS = %2.2f \n CLE = %2.0f \n VOC = %1.3f \n progress = %2.2f%s \n ----------- \n elapsed time = %us',f,FPS(f),CLE,VOC,f*100/frameNum,'%%',uint32(etime(clock,t0)));
     msg = sprintf(' frame = %u \n FPS = %2.2f \n progress = %2.2f%s \n ----------- \n elapsed time = %us',f,FPS(f),f*100/frameNum,'%%',uint32(etime(clock,t0)));
     fprintf([reverseStr, msg]);
     reverseStr = repmat(sprintf('\b'), 1, length(msg)-1);
@@ -165,7 +164,7 @@ end
 
 %% Remove from path
 if ~(exist('batchTest','var') && batchTest == true)
-    rmpath(genpath(fullfile(pwd,'..','toolbox')),'-BEGIN');
+    rmpath(genpath(fullfile(pwd,'toolbox')),'-BEGIN');
     rmpath(fullfile(pwd,'bin'),'-BEGIN');
     rmpath(fullfile(pwd,'IVT'),'-BEGIN');
 end

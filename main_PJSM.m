@@ -8,7 +8,6 @@ if ~(exist('batchTest','var') && batchTest == true)
     rng(randSeed);
     trackerName = 'PJSM';
 
-%     addpath(genpath(fullfile(pwd,'..','toolbox')),'-BEGIN');
     addpath(fullfile(pwd,'bin'),'-BEGIN');
     addpath(fullfile(pwd,'trackers',trackerName),'-BEGIN');
 
@@ -22,7 +21,7 @@ end
 
 % Read Ground Truth
     [gtCenters, gtCorners,gtInterv] = readGroundTruth(settings.dataSet, frameNum);
-    
+
 % Initialize tracker state
     [ initGeoParam, initAffParam] = initState(gtCenters,gtCorners,settings.objParam);
 
@@ -53,22 +52,22 @@ objDictNorm = [];
             initTracker(objDict,objDictNorm,resultsCorners,initGeoParam,shape,imgNames,frameNum,patchIndex,settings);
 % [objDict,objDictNorm,resultsCorners,bestParticle ] = ...
 %             initTracker_old(objDict,objDictNorm,resultsCorners,initGeoParam,shape,imgNames,frameNum,settings);
-    
+
 % Make patchDict
     patchDict = reshape(objDict(patchIndex,:),settings.objParam.patchWidth*settings.objParam.patchHeight,[]);
     [patchDict, patchDictNorm] = normalizeMat(patchDict);
-    
+
 % make patchBuffers
      for pn=1:settings.objParam.patchNum
         patchBuffer{pn} = patchDict(:,end - (settings.omParam.batchsize*settings.objParam.patchNum) + pn : settings.objParam.patchNum : end);
         patchBufferNorm{pn} = patchDictNorm(end - (settings.omParam.batchsize*settings.objParam.patchNum) + pn : settings.objParam.patchNum : end);
-     end    
-    
+     end
+
 %% Initialize Best Candidate Buffer
 % vector of index of group which start from indx 0
     listGroups = int32([(1:settings.groupSize+1:(settings.groupSize+1)*settings.objParam.patchNum*settings.pfParam.numsample)-1, ...
                           settings.pfParam.numsample*settings.objParam.patchNum*(settings.groupSize+1)]);
-    
+
 % Initialize group buffer
 % Initialize group buffer
     bestBuffer = objDict(:,end-settings.groupSize+1:end);
@@ -76,7 +75,7 @@ objDictNorm = [];
 
 % Initialize candidPatchGroup
 %    candidPatchGroup = zeros(settings.objParam.patchWidth*settings.objParam.patchHeight, settings.objParam.patchNum*settings.pfParam.numsample*(settings.groupSize+1));
-  
+
 
 poolInd = repmat(eye(settings.objParam.patchNum), settings.dictObjNum, settings.pfParam.numsample);
 
@@ -96,31 +95,31 @@ FPS = zeros(frameNum,1);
 initPoint = ones(size(patchDict,2),settings.pfParam.numsample * size(groupBuffer,2));
 %initPoint = ones(160,38400);
 
-reverseStr = ''; 
+reverseStr = '';
 fprintf('\n');
 prevCLE = 0;
 prevVOC = 1;
 allCLE = prevCLE;
 allVOC = prevVOC;
 for f = 2:frameNum
-    
+
     if (settings.verifyMode == 1) &&  f == settings.dataSet.lastFrame
         verify;
         return;
     end
-    
+
     tic;
     currentFrame = loadFrame( f, imgNames, settings);
 
     % sampling
      currentParticles = sampling(bestParticle, settings.pfParam);
-     
+
     % Crop candidates
     [ candidates, candidates_norm ] = cropCandidate(currentFrame,currentParticles,settings.objParam);
 
     % Sparse Coding
 	[patchCoef, initPoint] = Coding( candidates, groupBuffer, patchDict, listGroups, patchIndex, initPoint, settings);
-    
+
     % Alignment Pooling
     likelihood = Pooling(patchCoef,settings.objParam, patchDict, candidates, patchIndex, poolInd);
 
@@ -135,17 +134,17 @@ for f = 2:frameNum
             end
         end
     end
-	
+
     % Find the Best Candidate
     [~, bestParticleInd] = max(likelihood);
-    bestParticle = currentParticles(:, bestParticleInd);     
-    
+    bestParticle = currentParticles(:, bestParticleInd);
+
     % Dictionary Update
     bestCandidDataNrom=candidates_norm(bestParticleInd);
     bestCandidData=candidates(:,bestParticleInd);
     [ patchDict,patchDictNorm,objDict,objDictNorm, alpha, beta, wasOccluded] ...
        = updateDict(bestCandidData,bestCandidDataNrom,patchDict,patchDictNorm,objDict,objDictNorm,patchIndex,f,settings, alpha, beta, wasOccluded);
-    
+
     % Update Buffer
     if settings.groupSize > 0
         bestBuffer(:,1) = [];
@@ -157,9 +156,9 @@ for f = 2:frameNum
     bestCorners = paramAff2Corner(paramGeom2Aff(bestParticle), settings.objParam.size);
     resultsCorners(f,:) = bestCorners;
 
-   % Show Results   
+   % Show Results
     showTracker(currentFrame,bestCorners,f,objDict,objDictNorm,settings)
-    
+
     % Save Results
     settings = saveVideo(settings,f,frameNum);
 
@@ -170,7 +169,7 @@ for f = 2:frameNum
 %         prevCLE = CLE;
 %         prevVOC= VOC;
 %         allCLE = [allCLE CLE];
-%         allVOC = [allVOC VOC];        
+%         allVOC = [allVOC VOC];
 %     else
 %         VOC = prevVOC;
 %         CLE = prevCLE;
@@ -178,10 +177,10 @@ for f = 2:frameNum
 
     trackTime = toc;
     FPS(f) = 1/trackTime;
-    
+
     % Display tracker statistics
-%     msg = sprintf(' frame = %u \n FPS = %2.2f \n CLE = %2.0f\t\t\tavgCLE = %2.1f \n VOC = %1.2f\t\t\tavgVOC = %1.2f  \n progress = %2.2f%s \n ----------- \n elapsed time = %us',f,FPS(f),CLE,mean(allCLE),VOC,mean(allVOC),f*100/frameNum,'%%',uint32(etime(clock,t0)));    
-%     msg = sprintf(' frame = %u \n FPS = %2.2f \n CLE = %2.0f \n VOC = %1.3f \n progress = %2.2f%s \n ----------- \n elapsed time = %us',f,FPS(f),CLE,VOC,f*100/frameNum,'%%',uint32(etime(clock,t0)));    
+%     msg = sprintf(' frame = %u \n FPS = %2.2f \n CLE = %2.0f\t\t\tavgCLE = %2.1f \n VOC = %1.2f\t\t\tavgVOC = %1.2f  \n progress = %2.2f%s \n ----------- \n elapsed time = %us',f,FPS(f),CLE,mean(allCLE),VOC,mean(allVOC),f*100/frameNum,'%%',uint32(etime(clock,t0)));
+%     msg = sprintf(' frame = %u \n FPS = %2.2f \n CLE = %2.0f \n VOC = %1.3f \n progress = %2.2f%s \n ----------- \n elapsed time = %us',f,FPS(f),CLE,VOC,f*100/frameNum,'%%',uint32(etime(clock,t0)));
     msg = sprintf(' frame = %u \n FPS = %2.2f \n progress = %2.2f%s \n ----------- \n elapsed time = %us',f,FPS(f),f*100/frameNum,'%%',uint32(etime(clock,t0)));
     fprintf([reverseStr, msg]);
     reverseStr = repmat(sprintf('\b'), 1, length(msg)-1);
@@ -207,7 +206,7 @@ end
 
 %% Remove from path
 if ~(exist('batchTest','var') && batchTest == true)
-    rmpath(genpath(fullfile(pwd,'..','toolbox')));
+    rmpath(genpath(fullfile(pwd,'toolbox')));
     rmpath(fullfile(pwd,'bin'));
     rmpath(fullfile(pwd,trackerName));
 end

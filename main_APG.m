@@ -2,13 +2,12 @@ if ~(exist('batchTest','var') && batchTest == true)
 	close all;
     clear;
     clc;
-    
+
     rng('default');
     randSeed=3;
     rng(randSeed);
     trackerName = 'APG';
-    
-%     addpath(genpath(fullfile(pwd,'..','toolbox')),'-BEGIN');
+
     addpath(fullfile(pwd,'bin'),'-BEGIN');
     addpath(fullfile(pwd,'trackers',trackerName),'-BEGIN');
 
@@ -44,18 +43,18 @@ disp(frameNum);
 %        numzeros	= 4;		%number of digits for the frame index
 %        start_frame = 12;		% first frame index to be tracked
 %        nframes		= 600;		% number of frames to be tracked
-        %Initialization for the first frame. 
-        %Each column is a point indicating a corner of the target in the first image. 
+        %Initialization for the first frame.
+        %Each column is a point indicating a corner of the target in the first image.
         %The 1st row is the y coordinate and the 2nd row is for x.
         %Let [p1 p2 p3] be the three points, they are used to determine the affine parameters of the target, as following
         %    p1(65,55)-----------p3(170,53)
-        %         | 				|		 
+        %         | 				|
         %         |     target      |
-        %         | 				|	        
+        %         | 				|
         %   p2(64,140)--------------
 %        init_pos= [55,140,53;
 %                   65,64,170];
-%              % size of template    
+%              % size of template
 %end
 init_pos = [gtCorners(1,2),gtCorners(1,8),gtCorners(1,4);gtCorners(1,1),gtCorners(1,7),gtCorners(1,3)];
 disp(init_pos);
@@ -141,7 +140,7 @@ end
 
 %% Remove from path
 if ~(exist('batchTest','var') && batchTest == true)
-    rmpath(genpath(fullfile(pwd,'..','toolbox')),'-BEGIN');
+    rmpath(genpath(fullfile(pwd,'toolbox')),'-BEGIN');
     rmpath(fullfile(pwd,'bin'),'-BEGIN');
     rmpath(fullfile(pwd,'APG'),'-BEGIN');
 end

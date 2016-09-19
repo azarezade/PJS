@@ -1,4 +1,4 @@
 % compile MFoccusL2L1
 
-cd ../ToolBox;
+cd toolbox;
 compile_mex_code;
